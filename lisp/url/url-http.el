@@ -36,6 +36,7 @@
 (defvar url-current-object)
 (defvar url-http-after-change-function)
 (defvar url-http-chunked-counter)
+(defvar url-http-chunked-last-crlf-missing nil)
 (defvar url-http-chunked-length)
 (defvar url-http-chunked-start)
 (defvar url-http-connection-opened)
@@ -1068,7 +1069,16 @@ the callback to be triggered."
 Cannot give a sophisticated percentage, but we need a different
 function to look for the special 0-length chunk that signifies
 the end of the document."
-  (save-excursion
+  (if url-http-chunked-last-crlf-missing
+      (progn
+        (goto-char url-http-chunked-last-crlf-missing)
+        (if (not (looking-at "\r\n"))
+	    (url-http-debug "Still spinning for the terminator of last chunk...")
+          (url-http-debug "Saw the last CRLF.")
+          (delete-region (match-beginning 0) (match-end 0))
+          (if (url-http-parse-headers)
+	         (url-http-activate-callback))))
+    (save-excursion
     (goto-char st)
     (let ((read-next-chunk t)
 	  (case-fold-search t)
@@ -1145,13 +1155,16 @@ the end of the document."
 		  (url-display-percentage nil nil)
 		  ;; Every chunk, even the last 0-length one, is
 		  ;; terminated by CRLF.  Skip it.
-		  (when (looking-at "\r?\n")
+		  (if (not (looking-at "\r?\n"))
+                      (progn
+	                (url-http-debug "Spinning for the terminator of last chunk...")
+                        (setq-local url-http-chunked-last-crlf-missing (point)))
 		    (url-http-debug "Removing terminator of last chunk")
-		    (delete-region (match-beginning 0) (match-end 0)))
-		  (if (re-search-forward "^\r?\n" nil t)
-		      (url-http-debug "Saw end of trailers..."))
-		  (if (url-http-parse-headers)
-		      (url-http-activate-callback))))))))))
+		    (delete-region (match-beginning 0) (match-end 0))
+		    (if (re-search-forward "^\r?\n" nil t)
+		        (url-http-debug "Saw end of trailers..."))
+		    (if (url-http-parse-headers)
+		        (url-http-activate-callback))))))))))))
 
 (defun url-http-wait-for-headers-change-function (_st nd _length)
   ;; This will wait for the headers to arrive and then splice in the
