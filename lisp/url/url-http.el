@@ -36,7 +36,7 @@
 (defvar url-current-object)
 (defvar url-http-after-change-function)
 (defvar url-http-chunked-counter)
-(defvar url-http-chunked-last-crlf-missing nil)
+(defvar url-http-chunked-last-crlf-missing)
 (defvar url-http-chunked-length)
 (defvar url-http-chunked-start)
 (defvar url-http-connection-opened)
@@ -1158,7 +1158,7 @@ the end of the document."
 		  (if (not (looking-at "\r?\n"))
                       (progn
 	                (url-http-debug "Spinning for the terminator of last chunk...")
-                        (setq-local url-http-chunked-last-crlf-missing (point)))
+                        (setq url-http-chunked-last-crlf-missing (point)))
 		    (url-http-debug "Removing terminator of last chunk")
 		    (delete-region (match-beginning 0) (match-end 0))
 		    (if (re-search-forward "^\r?\n" nil t)
@@ -1353,6 +1353,7 @@ The return value of this function is the retrieval buffer."
 		       url-http-chunked-length
 		       url-http-chunked-counter
 		       url-http-chunked-start
+                       url-http-chunked-last-crlf-missing
 		       url-callback-function
 		       url-callback-arguments
 		       url-show-status
@@ -1377,6 +1378,7 @@ The return value of this function is the retrieval buffer."
 	      url-http-chunked-length nil
 	      url-http-chunked-start nil
 	      url-http-chunked-counter 0
+              url-http-chunked-last-crlf-missing nil
 	      url-callback-function callback
 	      url-callback-arguments cbargs
 	      url-http-after-change-function 'url-http-wait-for-headers-change-function
