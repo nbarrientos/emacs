@@ -847,7 +847,7 @@ the current buffer is in `erc-mode'."
       (and (setq cur (get-text-property i 'face str))
 	   (not (member cur faces))
 	   (push cur faces)))
-    faces))
+    (flatten-list faces)))
 
 ;;; Buffer switching
 

@@ -116,8 +116,12 @@
     (put-text-property 3 (length str0) 'font-lock-face
                        '(bold erc-current-nick-face) str0)
     (put-text-property 3 (length str1) 'face
-                       '(bold erc-current-nick-face) str1)
+                       'bold str1)
     (should (erc-faces-in str0))
-    (should (erc-faces-in str1)) ))
+    (should (length= (erc-faces-in str0) 2))
+    (should (equal (erc-faces-in str0) '(bold erc-current-nick-face)))
+    (should (erc-faces-in str1))
+    (should (length= (erc-faces-in str1) 1))
+    (should (equal (erc-faces-in str1) '(bold))) ))
 
 ;;; erc-track-tests.el ends here
